@@ -10,27 +10,38 @@ export default function Anuj() {
   const [numarray, setNumarray] = useState<number[]>([]);
   const [result, setResult] = useState<number | null>(null);
   const [app] = useState(() => new App());
+  const [numFields, setNumFields] = useState<number>(0);
+  const [showInputFields, setShowInputFields] = useState(false);
 
   async function handleHost() {
+    if (numFields <= 0) {
+      alert('Please enter the number of fields first');
+      return;
+    }
     const code = app.generateJoiningCode();
     setHostCode(code);
     setCurrentStep('step-2-host');
     await app.connect(code, 'alice');
+    setShowInputFields(true);
     setCurrentStep('step-3');
   }
 
   async function handleJoin() {
+    if (numFields <= 0) {
+      alert('Please enter the number of fields first');
+      return;
+    }
     setCurrentStep('step-2-join');
   }
 
   async function handleJoinSubmit() {
     setShowJoinSpinner(true);
     await app.connect(joinCode, 'bob');
+    setShowInputFields(true);
     setCurrentStep('step-3');
   }
 
   async function handleSubmitNumber() {
-
     setCurrentStep('step-4');
     console.log(numarray);
     const mpcResult = await app.mpcLargest(numarray);
@@ -42,6 +53,23 @@ export default function Anuj() {
   const handleKeyDown = (handler: () => void) => (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
       handler();
+    }
+  };
+
+  const handleNumFieldsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setNumFields(value);
+      setNumarray(new Array(value).fill(0));
+    }
+  };
+
+  const handleNumberChange = (index: number, value: string) => {
+    const newValue = parseInt(value);
+    if (!isNaN(newValue)) {
+      const newArray = [...numarray];
+      newArray[index] = newValue;
+      setNumarray(newArray);
     }
   };
 
@@ -63,7 +91,7 @@ export default function Anuj() {
             connection. There is no server.
           </div>
           <div style={{ textAlign: 'left', marginTop: '1em' }}>
-            Once connected, both parties will enter a number and the
+            Once connected, both parties will enter numbers and the
             larger number will be calculated. The smaller number is kept
             cryptographically secret.
           </div>
@@ -72,6 +100,16 @@ export default function Anuj() {
             to do this with any function.
           </div>
           <div>
+            <label htmlFor="num-fields">How many numbers do you want to enter?</label>
+            <input
+              type="number"
+              id="num-fields"
+              min="1"
+              value={numFields}
+              onChange={handleNumFieldsChange}
+            />
+          </div>
+          <div style={{ marginTop: '1em' }}>
             <button onClick={handleHost}>Host</button>&nbsp;
             <button onClick={handleJoin}>Join</button>
           </div>
@@ -105,55 +143,24 @@ export default function Anuj() {
         </div>
 
         <div className={`step ${currentStep !== 'step-3' ? 'hidden' : ''}`}>
-          <div>
-            <label htmlFor="number-input">Enter your number:</label>
-            <input
-              type="number"
-              id="number-input"
-              value={numarray[0]}
-              onChange={(e) => {
-                const newValue = parseInt(e.target.value);
-                if (!isNaN(newValue)) {
-                  setNumarray([...numarray, newValue]);
-                }
-              }}
-              onKeyDown={handleKeyDown(handleSubmitNumber)}
-            />
-          </div>
+          {showInputFields && [...Array(numFields)].map((_, index) => (
+            <div key={index}>
+              <label htmlFor={`number-input-${index}`}>Enter number {index + 1}:</label>
+              <input
+                type="number"
+                id={`number-input-${index}`}
+                value={numarray[index] || ''}
+                onChange={(e) => handleNumberChange(index, e.target.value)}
+                onKeyDown={handleKeyDown(handleSubmitNumber)}
+              />
+            </div>
+          ))}
 
-          <div>
-            <label htmlFor="number-input">Enter your number:</label>
-            <input
-              type="number"
-              id="number-input-1"
-              value={numarray[1]}
-              onChange={(e) => {
-                const newValue = parseInt(e.target.value);
-                if (!isNaN(newValue)) {
-                  setNumarray([...numarray, newValue]);
-                }
-              }}
-              onKeyDown={handleKeyDown(handleSubmitNumber)}
-            />
-          </div>
-          <div>
-            <label htmlFor="number-input">Enter your number:</label>
-            <input
-              type="number"
-              id="number-input-2"
-              value={numarray[2]}
-              onChange={(e) => {
-                const newValue = parseInt(e.target.value);
-                if (!isNaN(newValue)) {
-                  setNumarray([...numarray, newValue]);
-                }
-              }}
-              onKeyDown={handleKeyDown(handleSubmitNumber)}
-            />
-          </div>
-          <div>
-            <button onClick={handleSubmitNumber}>Submit</button>
-          </div>
+          {showInputFields && (
+            <div>
+              <button onClick={handleSubmitNumber}>Submit</button>
+            </div>
+          )}
         </div>
 
         <div className={`step ${currentStep !== 'step-4' ? 'hidden' : ''}`}>
@@ -167,6 +174,6 @@ export default function Anuj() {
           <h2><span>{result}</span></h2>
         </div>
       </div>
-    </div >
+    </div>
   );
 }

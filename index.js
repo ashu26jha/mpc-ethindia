@@ -96,4 +96,4 @@ async function main(a, b) {
 }
 
 
-main([1, 2, 3], [2, 3, 4]);
+main([1, 2, 3], [2, 3, 4, 5]);
