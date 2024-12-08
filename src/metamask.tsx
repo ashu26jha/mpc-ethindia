@@ -6,17 +6,32 @@ import Insurance from './abi/Insurance.json';
 const CONTRACT_ADDRESS = '0x81193f978ecd647b6e923bcfa5429728cc49baf8';
 const CONTRACT_ABI = Insurance;
 
-export default function MetaMask() {
-  const [account, setAccount] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string>('0');
-  const [policyDetails, setPolicyDetails] = useState<{
+interface MetaMaskProps {
+  account: string | null;
+  setAccount: (account: string | null) => void;
+  balance: string;
+  setBalance: (balance: string) => void;
+  policyDetails: {
     policyId: string;
     coverageAmount: string;
     validTill: string;
     active: boolean;
-  } | null>(null);
-  const [servicesCovered, setServicesCovered] = useState<string[]>([]);
+  } | null;
+  setPolicyDetails: (details: any) => void;
+  servicesCovered: string[];
+  setServicesCovered: (services: string[]) => void;
+}
 
+export default function MetaMask({
+  account,
+  setAccount,
+  balance,
+  setBalance,
+  policyDetails,
+  setPolicyDetails,
+  servicesCovered,
+  setServicesCovered
+}: MetaMaskProps) {
   const getBalance = async (address: string) => {
     try {
       const balance = await window.ethereum.request({
@@ -106,7 +121,7 @@ export default function MetaMask() {
 
   return (
     <div>
-      {!account ? (
+      {/* {!account ? (
         <button onClick={connectWallet}>Connect Wallet</button>
       ) : (
         <div>
@@ -128,7 +143,7 @@ export default function MetaMask() {
             </>
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 }

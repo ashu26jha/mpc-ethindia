@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import App from './App';
 import MetaMask from './metamask';
+import { ethers } from 'ethers';
+import Insurance from './abi/Insurance.json';
 
 export default function Anuj() {
   const [currentStep, setCurrentStep] = useState('step-1');
@@ -12,6 +14,42 @@ export default function Anuj() {
   const [app] = useState(() => new App());
   const [numFields, setNumFields] = useState<number>(0);
   const [showInputFields, setShowInputFields] = useState(false);
+  const [account, setAccount] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string>('0');
+  const [policyDetails, setPolicyDetails] = useState<{
+    policyId: string;
+    coverageAmount: string;
+    validTill: string;
+    active: boolean;
+  } | null>(null);
+  const [servicesCovered, setServicesCovered] = useState<string[]>([]);
+
+  useEffect(() => {
+    console.log('MetaMask Account:', account);
+    console.log('MetaMask Balance:', balance);
+    console.log('Policy Details:', policyDetails);
+    console.log('Services Covered:', servicesCovered);
+  }, [account, balance, policyDetails, servicesCovered]);
+
+  const handleAccountUpdate = (newAccount: string | null) => {
+    console.log('Account Updated:', newAccount);
+    setAccount(newAccount);
+  };
+
+  const handleBalanceUpdate = (newBalance: string) => {
+    console.log('Balance Updated:', newBalance);
+    setBalance(newBalance);
+  };
+
+  const handlePolicyUpdate = (newPolicy: any) => {
+    console.log('Policy Updated:', newPolicy);
+    setPolicyDetails(newPolicy);
+  };
+
+  const handleServicesUpdate = (newServices: string[]) => {
+    console.log('Services Updated:', newServices);
+    setServicesCovered(newServices);
+  };
 
   async function handleHost() {
     if (numFields <= 0) {
@@ -22,8 +60,10 @@ export default function Anuj() {
     setHostCode(code);
     setCurrentStep('step-2-host');
     await app.connect(code, 'alice');
-    setShowInputFields(true);
-    setCurrentStep('step-3');
+    setCurrentStep('step-4');
+    const mpcResult = await app.mpcLargest(new Array(numFields).fill(0));
+    setResult(mpcResult);
+    setCurrentStep('step-5');
   }
 
   async function handleJoin() {
@@ -37,6 +77,7 @@ export default function Anuj() {
   async function handleJoinSubmit() {
     setShowJoinSpinner(true);
     await app.connect(joinCode, 'bob');
+
     setShowInputFields(true);
     setCurrentStep('step-3');
   }
@@ -72,12 +113,42 @@ export default function Anuj() {
       setNumarray(newArray);
     }
   };
-
+  console.log("party", app.party)
   return (
     <div className="app">
       <div className="header">MPC Hello</div>
 
-      <MetaMask />
+      <MetaMask
+        account={account}
+        setAccount={handleAccountUpdate}
+        balance={balance}
+        setBalance={handleBalanceUpdate}
+        policyDetails={policyDetails}
+        setPolicyDetails={handlePolicyUpdate}
+        servicesCovered={servicesCovered}
+        setServicesCovered={handleServicesUpdate}
+      />
+
+      {account && (
+        <div>
+          <p>Current Account Balance: {balance} ETH</p>
+          {policyDetails && (
+            <>
+              <p>Policy Coverage: {policyDetails.coverageAmount} ETH</p>
+              <p>Policy ID: {policyDetails.policyId}</p>
+              <p>Valid Till: {policyDetails.validTill}</p>
+              <div>
+                <p>Services Covered:</p>
+                <ul>
+                  {servicesCovered.map((service, index) => (
+                    <li key={index}>{service}</li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="step-container">
         <div className={`step ${currentStep !== 'step-1' ? 'hidden' : ''}`}>
